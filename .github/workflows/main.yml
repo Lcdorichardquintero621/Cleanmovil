@@ -8,7 +8,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Descomprimir proyecto
-        run: unzip -o CleanMovil.zip
+        run: |
+          unzip -o CleanMovil.zip -d proyecto
+          S=$(find proyecto -name settings.gradle | head -1)
+          if [ -z "$S" ]; then echo "No encontré settings.gradle"; unzip -l CleanMovil.zip; exit 1; fi
+          echo "PROJ=$(dirname "$S")" >> $GITHUB_ENV
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -17,7 +21,8 @@ jobs:
         with:
           gradle-version: 8.5
       - run: gradle assembleDebug
+        working-directory: ${{ env.PROJ }}
       - uses: actions/upload-artifact@v4
         with:
           name: Cleanmovil-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ env.PROJ }}/app/build/outputs/apk/debug/app-debug.apk
